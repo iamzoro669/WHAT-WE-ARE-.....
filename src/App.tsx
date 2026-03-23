@@ -185,7 +185,7 @@ const App: React.FC = () => {
     }
 
     try {
-      const responseText = choice === 'yes' ? '♡ i like you too' : '✧ let\'s not rush';
+      const responseText = choice === 'yes' ? '♡ i love u too' : '✧ let\'s not rush';
       const time = new Date().toLocaleString();
       
       await fetch('https://api.web3forms.com/submit', {
@@ -566,7 +566,7 @@ const App: React.FC = () => {
                     borderRadius: '50px'
                   }}
                 >
-                  <span>♡ i like you too</span>
+                  <span>♡ i love u too</span>
                   <div
                     className="absolute inset-0 rounded-[50px] opacity-0 group-hover:opacity-100 transition-opacity duration-500"
                     style={{
