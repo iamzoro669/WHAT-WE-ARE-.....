@@ -709,12 +709,12 @@ const App: React.FC = () => {
       </div>
 
       {/* Background audio */}
-      <audio ref={audioRef} src="/GULABO .wav" loop />
+      <audio ref={audioRef} src="GULABO .wav" loop />
       
       {/* Voice audio */}
       <audio 
         ref={voiceAudioRef} 
-        src="/my voice .mp3" 
+        src="my voice .mp3" 
         onEnded={() => {
           setVoicePlaying(false);
           if (audioRef.current && currentSection >= 2) {
