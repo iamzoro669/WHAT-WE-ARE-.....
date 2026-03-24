@@ -53,22 +53,64 @@ const App: React.FC = () => {
     }
   ];
 
-  // High performance dedicated mouse-follower glow
+  // High performance dedicated mouse-follower glow and gyro tracking for mobile
   useEffect(() => {
     let ticking = false;
-    const handleMouseMove = (e: MouseEvent) => {
+    let isGyroActive = false;
+    
+    const updatePosition = (x: number, y: number) => {
       if (!ticking) {
         window.requestAnimationFrame(() => {
           if (cursorGlowRef.current) {
-            cursorGlowRef.current.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`;
+            cursorGlowRef.current.style.transform = `translate(${x}px, ${y}px)`;
           }
           ticking = false;
         });
         ticking = true;
       }
     };
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isGyroActive) {
+        updatePosition(e.clientX, e.clientY);
+      }
+    };
+
+    const handleOrientation = (e: DeviceOrientationEvent) => {
+      if (e.beta === null || e.gamma === null) return;
+      
+      // If we receive valid orientation data, we disable mouse tracking (which fires on tap on mobile)
+      isGyroActive = true;
+
+      const centerX = window.innerWidth / 2;
+      const centerY = window.innerHeight / 2;
+
+      // Sensitivity mappings: ~60 degrees total range maps to the full screen
+      const sensitivityX = window.innerWidth / 60; 
+      const sensitivityY = window.innerHeight / 60;
+
+      // Gamma = Left/Right tilt (-90 to 90). Normal range when using phone is typically -30 to 30.
+      const transformedX = centerX + (e.gamma * sensitivityX);
+      const finalX = Math.min(Math.max(transformedX, 0), window.innerWidth);
+
+      // Beta = Front/Back tilt (-180 to 180). Assume 45 degrees is flat/neutral resting reading angle.
+      const normalizedBeta = e.beta - 45; 
+      const transformedY = centerY + (normalizedBeta * sensitivityY);
+      const finalY = Math.min(Math.max(transformedY, 0), window.innerHeight);
+
+      updatePosition(finalX, finalY);
+    };
+
     window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
+    
+    if (window.DeviceOrientationEvent) {
+      window.addEventListener('deviceorientation', handleOrientation);
+    }
+    
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('deviceorientation', handleOrientation);
+    };
   }, []);
 
   // Typewriter effect for letter
@@ -157,6 +199,11 @@ const App: React.FC = () => {
   const nextSection = () => {
     if (isTransitioning) return;
     setIsTransitioning(true);
+
+    // Request device orientation permission on first interaction (iOS 13+ requirement)
+    if (currentSection === 0 && typeof (DeviceOrientationEvent as any)?.requestPermission === 'function') {
+      (DeviceOrientationEvent as any).requestPermission().catch(console.error);
+    }
 
     if (currentSection === 4 && voicePlaying) {
       if (voiceAudioRef.current) {
